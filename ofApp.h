@@ -36,6 +36,7 @@ private:
 	ofxFloatSlider MonitorGain_AGC_Target;
 	ofxFloatSlider MonitorGain;
 	
+	ofxToggle b_Dmx;
 	ofxFloatSlider DmxGain;
 	ofxToggle b_AmbCancel;
 	
@@ -68,6 +69,7 @@ private:
 	/****************************************
 	****************************************/
 	int Limit_ColorVal(int val);
+	void clear_VboSetting_gl();
 	
 public:
 	/****************************************
