@@ -49,7 +49,7 @@ void ofApp::setup(){
 	********************/
 	gui.setup();
 	gui.add(LPF_Amb_ThreshSec.setup("LPF Amb Th_Sec", 10.0, 0, 25.0));
-	gui.add(LPF_Sound_ThreshSec.setup("LPF Snd Th_Sec", 0.3, 0, 1.5));
+	gui.add(LPF_Sound_ThreshSec.setup("LPF Snd Th_Sec", 0.3, 0, 3.0));
 	
 	gui.add(b_DownLimit.setup("b_DownLimit", false));
 	gui.add(SoundFilter_DownPerSec.setup("DownPerSec", 40, 10, 50));
@@ -58,9 +58,10 @@ void ofApp::setup(){
 	gui.add(SoundFilter_Thresh_NonLinear.setup("NonLinear", 0.01, 0, 0.3));
 	
 	gui.add(b_AGC.setup("b_AGC", false));
-	gui.add(MonitorGain_AGC_Target.setup("AGC Target", 0.1, 0.01, 1));
+	gui.add(MonitorGain_AGC_Target.setup("AGC Target", 0.15, 0.01, 1));
 	
 	gui.add(MonitorGain.setup("MonitorGain", 8, 1, 20));
+	gui.add(b_Dmx.setup("b_Dmx", false));
 	gui.add(DmxGain.setup("DmxGain", 2, 1, 10));
 	gui.add(b_AmbCancel.setup("b_AmbCancel", false));
 	
@@ -177,7 +178,7 @@ void ofApp::draw(){
 
 	/********************
 	********************/
-	dmx.draw();
+	if(b_Dmx) dmx.draw();
 	
 	/********************
 	********************/
@@ -192,6 +193,19 @@ void ofApp::draw(){
 	
 	ofPopMatrix();
 	
+	clear_VboSetting_gl();
+	
+	/********************
+	********************/
+	ofSetColor(150);
+	ofSetLineWidth(1);
+	const double x_step = 21.333;
+	for(int i = 0; i * x_step < ofGetWidth(); i++){
+		int x = int(i * x_step + 0.5);
+		ofLine(x, 0, x, ofGetHeight() - 1 );
+	}
+	
+	
 	/********************
 	********************/
 	gui.draw();
@@ -200,6 +214,29 @@ void ofApp::draw(){
 	printf("> FrameRate = %5.1f\r", ofGetFrameRate());
 	fflush(stdout);
 	*/
+}
+
+/******************************
+descrition
+	ofVboで描画すると、openGlの設定が何らか変わるようだ。
+	この結果、次に来る描画が所望の動作とならないケース多数。
+		次のfunctionが描画されないなど
+			ofDrawBitmapString()
+			image.draw()
+			
+	この対応として、
+		ofCircle(). ofRect().
+	等を1発いれてやることで、OKとなった。
+	おそらく、この関数内で、openGl設定が、また変わるのだろう。
+		α = 0;
+	にて描画する。
+******************************/
+void ofApp::clear_VboSetting_gl()
+{
+	ofSetColor(255, 255, 255, 0);
+	ofCircle(0, 0, 1);
+	
+	ofSetColor(255, 255, 255, 255);
 }
 
 /******************************
@@ -321,7 +358,7 @@ void ofApp::audioReceived(float *input, int bufferSize, int nChannels)
 		// double Dmx_SoundLevel = ofMap(v_Sound * MonitorGain * DmxGain, 0, 1, 0, 255, true);
 		// double Dmx_SoundLevel = v_Sound * MonitorGain * DmxGain;
 		double Dmx_SoundLevel;
-		if(b_AmbCancel)	Dmx_SoundLevel = max((v_Sound - v_Amb), 0.0) * MonitorGain * DmxGain + v_Amb * MonitorGain;
+		if(b_AmbCancel)	Dmx_SoundLevel = ( max((v_Sound - v_Amb), 0.0) + v_Amb ) * MonitorGain * DmxGain;
 		else			Dmx_SoundLevel = v_Sound * MonitorGain * DmxGain;
 		
 		Thread_SoundLevel_Dmx.lock();

@@ -27,11 +27,13 @@ void DMX::setup(){
 /******************************
 ******************************/
 void DMX::update(const ofColor& color){
-
-	data[0] = color.a;
-	data[1] = color.r;
-	data[2] = color.g;
-	data[3] = color.b;
+	// int offset = 0;
+	int offset = 39;
+	
+	data[offset + 0] = color.a;
+	data[offset + 1] = color.r;
+	data[offset + 2] = color.g;
+	data[offset + 3] = color.b;
 }
 
 /******************************
